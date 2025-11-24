@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { SearchInput } from '@/components/ui/search-input';
 import { GenealogyTree } from '@/components/genealogy-tree';
 import { LoadingState } from '@/components/loading-state';
-import { ParticleBackground } from '@/components/particle-background';
 import { generateGenealogy } from './actions';
 import { GenealogyData } from '@/types';
 import { ThemeToggle } from '@/components/theme-toggle';
@@ -42,7 +41,7 @@ export default function Home() {
     return (
         <div className="min-h-screen bg-background relative overflow-hidden">
             {/* Animated background grid */}
-            <ParticleBackground />
+            <div className="fixed inset-0 bg-grid-pattern opacity-[0.02] dark:opacity-[0.05] pointer-events-none" />
 
             {/* Theme toggle */}
             <div className="fixed top-6 right-6 z-50">
