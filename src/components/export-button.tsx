@@ -23,9 +23,9 @@ export function ExportButton({ targetId, fileName = 'genealogy-tree' }: ExportBu
             await new Promise(resolve => setTimeout(resolve, 100));
 
             const dataUrl = await toPng(element, {
-                cacheBust: true,
                 backgroundColor: '#0a0a0a', // Match background color
                 pixelRatio: 2, // Higher quality
+                skipAutoScale: true,
                 filter: (node: Node) => {
                     // Exclude the export button itself from the capture if it's inside the container
                     if (node instanceof HTMLElement && node.tagName === 'BUTTON' && node.innerText.includes('Export')) {

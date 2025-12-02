@@ -4,6 +4,7 @@ export interface Root {
   era: string;
   impact: string;
   location: string;
+  image_url?: string;
 }
 
 export interface Trunk {
@@ -19,6 +20,7 @@ export interface Branch {
   description: string;
   key_proponent: string;
   modern_example: string;
+  image_url?: string;
 }
 
 export interface Rival {

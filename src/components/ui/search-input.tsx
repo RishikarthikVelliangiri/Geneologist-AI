@@ -20,7 +20,7 @@ export function SearchInput({ onSearch, isLoading }: SearchInputProps) {
 
     return (
         <form onSubmit={handleSubmit} className="w-full max-w-2xl mx-auto relative group">
-            <div className="absolute inset-0 bg-neon-blue/20 blur-xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+            <div className="absolute inset-0 bg-neon-blue/20 blur-xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
             <div className="relative flex items-center">
                 <input
                     type="text"

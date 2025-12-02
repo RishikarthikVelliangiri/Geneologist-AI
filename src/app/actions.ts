@@ -133,17 +133,44 @@ export async function generateGenealogy(rawConcept: string): Promise<{ success: 
 
     const data = JSON.parse(cleanText) as GenealogyData;
 
-    // Try to fetch image from Google Custom Search
-    const googleImage = await getGoogleImage(concept);
+    // Try to fetch images for main concept and branches in parallel
+    const imagePromises = [
+      // Main concept image
+      (async () => {
+        const googleImage = await getGoogleImage(concept);
+        if (googleImage) {
+          data.image_url = googleImage;
+        } else {
+          const searchTerm = concept.toLowerCase().replace(/[^a-z0-9]+/g, ',');
+          data.image_url = `https://loremflickr.com/1280/720/${searchTerm}/all?lock=${Date.now()}`;
+          console.log(`Using Flickr fallback for main concept: ${searchTerm}`);
+        }
+      })(),
+      // Branch images
+      ...data.branches.map(async (branch) => {
+        const googleImage = await getGoogleImage(branch.name);
+        if (googleImage) {
+          branch.image_url = googleImage;
+        } else {
+          const searchTerm = branch.name.toLowerCase().replace(/[^a-z0-9]+/g, ',');
+          branch.image_url = `https://loremflickr.com/800/800/${searchTerm}/all?lock=${Date.now() + Math.random()}`;
+          console.log(`Using Flickr fallback for branch: ${branch.name}`);
+        }
+      }),
+      // Root images
+      ...data.roots.map(async (root) => {
+        const googleImage = await getGoogleImage(root.name);
+        if (googleImage) {
+          root.image_url = googleImage;
+        } else {
+          const searchTerm = root.name.toLowerCase().replace(/[^a-z0-9]+/g, ',');
+          root.image_url = `https://loremflickr.com/800/800/${searchTerm}/all?lock=${Date.now() + Math.random()}`;
+          console.log(`Using Flickr fallback for root: ${root.name}`);
+        }
+      })
+    ];
 
-    if (googleImage) {
-      data.image_url = googleImage;
-    } else {
-      // Fallback to Flickr if Google search fails or is not configured
-      const searchTerm = concept.toLowerCase().replace(/[^a-z0-9]+/g, ',');
-      data.image_url = `https://loremflickr.com/1280/720/${searchTerm}/all?lock=${Date.now()}`;
-      console.log(`Using Flickr fallback for: ${searchTerm}`);
-    }
+    await Promise.all(imagePromises);
 
     return { success: true, data };
   } catch (error) {

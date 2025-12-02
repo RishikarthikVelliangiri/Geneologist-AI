@@ -14,23 +14,47 @@ export function TimelineNavigator() {
     const [activeSection, setActiveSection] = useState('');
 
     useEffect(() => {
-        const observer = new IntersectionObserver(
-            (entries) => {
-                entries.forEach((entry) => {
-                    if (entry.isIntersecting) {
-                        setActiveSection(entry.target.id);
+        const handleScroll = () => {
+            const viewportHeight = window.innerHeight;
+            // Use a point slightly above center (40%) to trigger the next section a bit earlier
+            // or stick to center (50%). Center is usually safest.
+            const checkPoint = window.scrollY + (viewportHeight * 0.5);
+
+            for (const { id } of sections) {
+                const element = document.getElementById(id);
+                if (element) {
+                    const { offsetTop, offsetHeight } = element;
+                    // Note: offsetTop is usually reliable if no transformed parents. 
+                    // But to be absolutely safe with complex layouts:
+                    // const rect = element.getBoundingClientRect();
+                    // const top = rect.top + window.scrollY;
+                    // const bottom = top + rect.height;
+
+                    // However, since we are in a fairly standard layout, offsetTop relative to document 
+                    // (since body is likely the offset parent or we can calculate it) is okay.
+                    // But let's use getBoundingClientRect for robustness against relative parents.
+
+                    const rect = element.getBoundingClientRect();
+                    const absoluteTop = rect.top + window.scrollY;
+                    const absoluteBottom = absoluteTop + rect.height;
+
+                    if (checkPoint >= absoluteTop && checkPoint <= absoluteBottom) {
+                        setActiveSection(id);
+                        break;
                     }
-                });
-            },
-            { threshold: 0.2, rootMargin: "-20% 0px -20% 0px" }
-        );
+                }
+            }
+        };
 
-        sections.forEach(({ id }) => {
-            const element = document.getElementById(id);
-            if (element) observer.observe(element);
-        });
+        window.addEventListener('scroll', handleScroll, { passive: true });
+        // Check initially and on resize
+        window.addEventListener('resize', handleScroll);
+        handleScroll();
 
-        return () => observer.disconnect();
+        return () => {
+            window.removeEventListener('scroll', handleScroll);
+            window.removeEventListener('resize', handleScroll);
+        };
     }, []);
 
     const scrollToSection = (id: string) => {
@@ -53,8 +77,8 @@ export function TimelineNavigator() {
                         {label}
                     </span>
                     <div className={`w-3 h-3 rounded-full border transition-all duration-300 ${activeSection === id
-                            ? 'bg-neon-blue border-neon-blue shadow-[0_0_10px_var(--neon-blue)] scale-125'
-                            : 'bg-transparent border-muted-foreground/50 group-hover:border-neon-blue/50'
+                        ? 'bg-neon-blue border-neon-blue shadow-[0_0_10px_var(--neon-blue)] scale-125'
+                        : 'bg-transparent border-muted-foreground/50 group-hover:border-neon-blue/50'
                         }`} />
                     {activeSection === id && (
                         <motion.div

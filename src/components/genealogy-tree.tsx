@@ -157,8 +157,6 @@ export function GenealogyTree({ data, onNodeClick }: GenealogyTreeProps) {
                         src={`/api/proxy-image?url=${encodeURIComponent(data.image_url)}`}
                         alt={data.concept}
                         className="w-full h-full object-cover"
-                        crossOrigin="anonymous"
-                        referrerPolicy="no-referrer"
                         onError={(e) => {
                             e.currentTarget.style.display = 'none';
                             e.currentTarget.parentElement!.style.display = 'none';
@@ -213,9 +211,25 @@ export function GenealogyTree({ data, onNodeClick }: GenealogyTreeProps) {
                                                 <div className="absolute inset-0 bg-gradient-to-r from-neon-blue/0 via-neon-blue/5 to-neon-blue/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
                                                 <div className="relative z-10">
-                                                    <div className="flex items-center gap-3 mb-5">
-                                                        <div className="h-1 w-16 bg-gradient-to-r from-neon-blue to-transparent rounded-full" />
-                                                        <span className="text-xs font-mono text-neon-blue/70 tracking-widest uppercase">Root {index + 1}</span>
+                                                    <div className="flex justify-between items-start mb-5">
+                                                        <div className="flex items-center gap-3 mt-2">
+                                                            <div className="h-1 w-16 bg-gradient-to-r from-neon-blue to-transparent rounded-full" />
+                                                            <span className="text-xs font-mono text-neon-blue/70 tracking-widest uppercase">Root {index + 1}</span>
+                                                        </div>
+                                                        {root.image_url && (
+                                                            <div className="relative w-32 h-32 rounded-full overflow-hidden border-2 border-neon-blue/50 shadow-[0_0_20px_rgba(0,243,255,0.3)] shrink-0 group-hover:scale-105 transition-transform duration-500">
+                                                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                                                <img
+                                                                    src={`/api/proxy-image?url=${encodeURIComponent(root.image_url)}`}
+                                                                    alt={root.name}
+                                                                    className="w-full h-full object-cover"
+                                                                    onError={(e) => {
+                                                                        e.currentTarget.style.display = 'none';
+                                                                        e.currentTarget.parentElement!.style.display = 'none';
+                                                                    }}
+                                                                />
+                                                            </div>
+                                                        )}
                                                     </div>
 
                                                     <h3 className="text-3xl md:text-5xl font-bold mb-5 text-foreground group-hover:text-neon-blue transition-colors duration-300">
@@ -391,9 +405,25 @@ export function GenealogyTree({ data, onNodeClick }: GenealogyTreeProps) {
                                                     <div className="absolute inset-0 bg-gradient-to-l from-neon-purple/0 via-neon-purple/5 to-neon-purple/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
                                                     <div className="relative z-10">
-                                                        <div className="flex items-center gap-3 mb-5">
-                                                            <div className="h-1 w-16 bg-gradient-to-r from-neon-purple to-transparent rounded-full" />
-                                                            <span className="text-xs font-mono text-neon-purple/70 tracking-widest uppercase">Branch {index + 1}</span>
+                                                        <div className="flex justify-between items-start mb-5">
+                                                            <div className="flex items-center gap-3 mt-2">
+                                                                <div className="h-1 w-16 bg-gradient-to-r from-neon-purple to-transparent rounded-full" />
+                                                                <span className="text-xs font-mono text-neon-purple/70 tracking-widest uppercase">Branch {index + 1}</span>
+                                                            </div>
+                                                            {branch.image_url && (
+                                                                <div className="relative w-32 h-32 rounded-full overflow-hidden border-2 border-neon-purple/50 shadow-[0_0_20px_rgba(188,19,254,0.3)] shrink-0 group-hover:scale-105 transition-transform duration-500">
+                                                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                                                    <img
+                                                                        src={`/api/proxy-image?url=${encodeURIComponent(branch.image_url)}`}
+                                                                        alt={branch.name}
+                                                                        className="w-full h-full object-cover"
+                                                                        onError={(e) => {
+                                                                            e.currentTarget.style.display = 'none';
+                                                                            e.currentTarget.parentElement!.style.display = 'none';
+                                                                        }}
+                                                                    />
+                                                                </div>
+                                                            )}
                                                         </div>
 
                                                         <h3 className="text-3xl md:text-5xl font-bold mb-6 text-foreground group-hover:text-neon-purple transition-colors duration-300">
