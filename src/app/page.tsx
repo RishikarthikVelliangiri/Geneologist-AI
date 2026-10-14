@@ -3,78 +3,93 @@
 import { useState } from 'react';
 import { SearchInput } from '@/components/ui/search-input';
 import { GenealogyTree } from '@/components/genealogy-tree';
+import { LineageSchematic } from '@/components/lineage-schematic';
 import { LoadingState } from '@/components/loading-state';
-import { ParticleBackground } from '@/components/particle-background';
+import { ThemeToggle } from '@/components/theme-toggle';
 import { generateGenealogy } from './actions';
 import { GenealogyData } from '@/types';
-import { ThemeToggle } from '@/components/theme-toggle';
+
+const EXAMPLES = ['Stoicism', 'Democracy', 'Impressionism', 'Entropy'];
 
 export default function Home() {
     const [genealogyData, setGenealogyData] = useState<GenealogyData | null>(null);
     const [loading, setLoading] = useState(false);
+    const [query, setQuery] = useState('');
+    const [error, setError] = useState<string | null>(null);
 
     const handleSearch = async (concept: string) => {
+        setQuery(concept);
         setLoading(true);
+        setError(null);
         setGenealogyData(null);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
 
         try {
             const result = await generateGenealogy(concept);
-
             if (result.success && result.data) {
                 setGenealogyData(result.data);
             } else {
-                console.error('Error generating genealogy:', result.error);
-                alert(result.error || 'Failed to generate genealogy. Please try again.');
+                setError(result.error || 'Could not trace this concept. Please try again.');
             }
-        } catch (error) {
-            console.error('Unexpected error:', error);
-            alert('An unexpected error occurred. Please try again.');
+        } catch (err) {
+            console.error('Unexpected error:', err);
+            setError('Something went wrong. Please try again.');
         } finally {
             setLoading(false);
         }
     };
 
-    const handleNodeClick = async (term: string) => {
-        await handleSearch(term);
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    };
+    const showHero = !loading && !genealogyData;
 
     return (
-        <div className="min-h-screen bg-background relative overflow-hidden">
-            {/* Animated background grid */}
-            <ParticleBackground />
-
-            {/* Theme toggle */}
-            <div className="fixed top-6 right-6 z-50">
-                <ThemeToggle />
-            </div>
-
-            {/* Header */}
-            <header className="relative z-10 pt-20 pb-12 px-4">
-                <div className="max-w-4xl mx-auto text-center">
-                    <h1 className="text-5xl md:text-7xl font-bold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-neon-blue via-neon-purple to-neon-blue bg-[length:200%_auto] animate-gradient tracking-tight">
-                        The Idea Genealogist
-                    </h1>
-                    <p className="text-lg md:text-xl text-muted-foreground mb-8 font-light max-w-2xl mx-auto">
-                        Trace the intellectual ancestry of any concept through time
-                    </p>
-                    <SearchInput onSearch={handleSearch} isLoading={loading} />
+        <div className="min-h-screen bg-background">
+            <header className="mx-auto flex w-full max-w-6xl flex-wrap items-center gap-x-8 gap-y-3 px-6 py-5">
+                <span className="shrink-0 font-display text-xl">The Idea Genealogist</span>
+                {!showHero && (
+                    <div className="order-last w-full md:order-none md:max-w-md md:flex-1">
+                        <SearchInput onSearch={handleSearch} isLoading={loading} compact />
+                    </div>
+                )}
+                <div className="ml-auto">
+                    <ThemeToggle />
                 </div>
             </header>
 
-            {/* Main content */}
-            <main className="relative z-10 pb-20">
-                {loading ? (
-                    <LoadingState />
-                ) : genealogyData ? (
-                    <GenealogyTree data={genealogyData} onNodeClick={handleNodeClick} />
-                ) : (
-                    <div className="text-center py-20 px-4">
-                        <p className="text-muted-foreground text-lg">
-                            Enter a concept above to explore its genealogy
-                        </p>
-                    </div>
+            <main>
+                {showHero && (
+                    <section className="mx-auto grid w-full max-w-6xl gap-16 px-6 pb-24 pt-12 md:grid-cols-[1.4fr_1fr] md:items-center md:pt-24">
+                        <div>
+                            <h1 className="text-6xl md:text-8xl">Every idea has a family tree.</h1>
+                            <p className="mt-8 max-w-xl text-lg text-muted-foreground">
+                                Name a concept and see where it came from, who gave it form, what it became, and what it was
+                                written against.
+                            </p>
+                            <div className="mt-12 max-w-2xl">
+                                <SearchInput onSearch={handleSearch} isLoading={loading} />
+                                <p className="mt-4 text-sm text-muted-foreground">
+                                    Try{' '}
+                                    {EXAMPLES.map((example, i) => (
+                                        <span key={example}>
+                                            <button onClick={() => handleSearch(example)} className="underline hover:text-accent">
+                                                {example}
+                                            </button>
+                                            {i < EXAMPLES.length - 1 && ', '}
+                                        </span>
+                                    ))}
+                                </p>
+                                {error && (
+                                    <p role="alert" className="mt-6 text-rival">
+                                        {error}
+                                    </p>
+                                )}
+                            </div>
+                        </div>
+                        <LineageSchematic />
+                    </section>
                 )}
+
+                {loading && <LoadingState concept={query} />}
+                {genealogyData && <GenealogyTree data={genealogyData} onNodeClick={handleSearch} />}
             </main>
         </div>
     );

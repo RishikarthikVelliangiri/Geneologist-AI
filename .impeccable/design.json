@@ -1,0 +1,103 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-12T00:00:00Z",
+  "title": "Design System: The Idea Genealogist",
+  "extensions": {
+    "colorMeta": {
+      "ultramarine": { "role": "primary", "displayName": "Ultramarine", "canonical": "#2437cc", "tonalRamp": ["#0b1160", "#121c8f", "#1a2aae", "#2437cc", "#4a5bdb", "#7683e6", "#a6aef0", "#d5d9f8"] },
+      "rival-brick": { "role": "secondary", "displayName": "Rival Brick", "canonical": "#a8321c", "tonalRamp": ["#3d1109", "#5f1c10", "#82280f", "#a8321c", "#c4553f", "#d9806e", "#e8ada1", "#f4d8d2"] },
+      "wall": { "role": "neutral", "displayName": "Stone Wall", "canonical": "#e8eae6", "tonalRamp": ["#15181d", "#4a5058", "#7a8088", "#a3a8a1", "#c3c7c1", "#d9dcd6", "#e8eae6", "#f4f5f2"] },
+      "ink": { "role": "neutral", "displayName": "Ink", "canonical": "#15181d", "tonalRamp": ["#0a0c0f", "#15181d", "#2a2f36", "#4a5058", "#6d737b", "#9ba2ad", "#c3c7c1", "#e9e7e0"] }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Page h1: hero line and searched concept." },
+      "headline": { "displayName": "Headline", "purpose": "Section heads." },
+      "title": { "displayName": "Title", "purpose": "Entry names and the search input text." },
+      "lede": { "displayName": "Lede", "purpose": "Summary, era, defining work, rival argument." },
+      "body": { "displayName": "Body", "purpose": "Running copy, max-w-prose." },
+      "label": { "displayName": "Label", "purpose": "Captions above facts, notes, actions." }
+    },
+    "shadows": [],
+    "motion": [
+      { "name": "spine-draw", "value": "scaleY driven by scroll progress, origin top; fixed at 1 under prefers-reduced-motion", "purpose": "Accent line draws down the lineage as the reader scrolls." },
+      { "name": "color-shift", "value": "transition-colors", "purpose": "Search underline and action hover to ultramarine." }
+    ],
+    "breakpoints": [
+      { "name": "md", "value": "768px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Search Field",
+      "kind": "input",
+      "refersTo": "search-field",
+      "description": "Underline-only Caslon input with a text Trace action.",
+      "html": "<div class=\"ds-search\"><input class=\"ds-search-input\" placeholder=\"Stoicism, democracy, impressionism\"><button class=\"ds-search-go\">Trace &rarr;</button></div>",
+      "css": ".ds-search { display:flex; align-items:flex-end; gap:16px; border-bottom:1px solid var(--foreground); } .ds-search:focus-within { border-color: var(--accent); } .ds-search-input { flex:1; min-width:0; background:transparent; border:0; outline:0; padding:12px 0; font-family: var(--font-caslon), serif; font-size:2rem; color: var(--foreground); } .ds-search-input::placeholder { color: var(--muted-foreground); opacity:.6; } .ds-search-go { margin-bottom:8px; background:none; border:0; cursor:pointer; font-size:.875rem; font-weight:500; letter-spacing:.025em; color: var(--foreground); } .ds-search-go:hover, .ds-search-go:focus-visible { color: var(--accent); outline:2px solid var(--accent); outline-offset:3px; }"
+    },
+    {
+      "name": "Trace Action",
+      "kind": "custom",
+      "refersTo": "action-link",
+      "description": "Ultramarine text action that follows a thread to a new search.",
+      "html": "<button class=\"ds-trace\">Trace Stoicism &nearr;</button>",
+      "css": ".ds-trace { background:none; border:0; cursor:pointer; font-size:.875rem; font-weight:500; color: var(--accent); text-underline-offset:4px; } .ds-trace:hover { text-decoration:underline; } .ds-trace:focus-visible { outline:2px solid var(--accent); outline-offset:3px; }"
+    },
+    {
+      "name": "Plate",
+      "kind": "card",
+      "refersTo": "plate",
+      "description": "Square image plate with monogram fallback and caption.",
+      "html": "<figure class=\"ds-plate-wrap\"><div class=\"ds-plate\">Z</div><figcaption class=\"ds-caption\">Image: Wikipedia, Zeno</figcaption></figure>",
+      "css": ".ds-plate-wrap { margin:0; width:220px; } .ds-plate { aspect-ratio:4/5; background: var(--plate); color: var(--muted-foreground); display:flex; align-items:center; justify-content:center; font-family: var(--font-caslon), serif; font-size:3rem; } .ds-caption { margin-top:12px; font-size:.875rem; color: var(--muted-foreground); }"
+    },
+    {
+      "name": "Codifier Slab",
+      "kind": "custom",
+      "refersTo": "codifier-slab",
+      "description": "The single filled ultramarine block holding the key figure.",
+      "html": "<div class=\"ds-slab\"><h2 class=\"ds-slab-h\">Zeno of Citium</h2><p class=\"ds-slab-n\">Codified in c. 300 BCE</p><dl class=\"ds-slab-f\"><dt>The world around it</dt><dd>Hellenistic Athens.</dd></dl></div>",
+      "css": ".ds-slab { background: var(--accent-slab); color: var(--accent-slab-foreground); padding:64px 56px; } .ds-slab-h { font-family: var(--font-caslon), serif; font-weight:400; font-size:3.5rem; line-height:1.05; margin:0; } .ds-slab-n { margin:16px 0 0; opacity:.85; } .ds-slab-f { margin:32px 0 0; padding-top:24px; border-top:1px solid rgba(244,245,255,.3); } .ds-slab-f dt { font-size:.875rem; opacity:.85; margin-bottom:4px; } .ds-slab-f dd { margin:0; }"
+    },
+    {
+      "name": "Lineage Entry",
+      "kind": "custom",
+      "description": "Hairline-topped entry with era, name, and label/value facts.",
+      "html": "<div class=\"ds-entry\"><p class=\"ds-era\">c. 300 BCE</p><h3 class=\"ds-name\">Zeno</h3><dl><dt class=\"ds-dt\">What they contributed</dt><dd class=\"ds-dd\">Founded the Stoa.</dd></dl></div>",
+      "css": ".ds-entry { border-top:1px solid var(--rule); padding:40px 0; } .ds-era { font-family: var(--font-caslon), serif; font-size:1.5rem; margin:0; } .ds-name { font-family: var(--font-caslon), serif; font-weight:400; font-size:3rem; line-height:1.05; margin:16px 0 24px; } .ds-dt { font-size:.875rem; color: var(--muted-foreground); margin-bottom:4px; } .ds-dd { margin:0; max-width:65ch; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Museum Catalogue",
+    "overview": "The product is a printed catalogue for one idea at a time: a cool stone gallery wall, near-black ink, hairline rules, square plates with captions, and a single ultramarine thread running down the page. In dark mode the wall becomes a night-blue reading room; the same catalogue, lamp-lit. It replaces an earlier neon look entirely; nothing of that world is inherited.\n\nDisplay type is a high-contrast Caslon set large and quiet; everything else is a plain grotesque doing label and reading work. Hierarchy comes from scale jumps and whitespace, not from boxes, tints, or effects. Ultramarine appears only where the lineage is being followed (the spine, links, the codifier slab, focus).",
+    "keyCharacteristics": [
+      "Flat: no shadows, gradients, glass, or pills.",
+      "One accent, ultramarine, plus one counter-colour (brick) reserved for the rival.",
+      "Square plates (4:5 portraits, 4:3 landscapes) with a muted monogram fallback.",
+      "Hairline rules divide entries; the vertical spine is the page's organising device.",
+      "Labels sit as small muted captions above their values, like object labels."
+    ],
+    "rules": [
+      { "name": "The One Thread Rule", "body": "Ultramarine marks the path being followed: spine, links, slab, focus. It is never used as decoration, a fill for ordinary cards, or a background tint.", "section": "colors" },
+      { "name": "The Rival Apart Rule", "body": "Brick belongs to the rival and to errors only, so opposition reads as a different voice.", "section": "colors" },
+      { "name": "The Caslon Is Display Rule", "body": "Caslon only at 24px and up. Below that, use Hanken.", "section": "typography" },
+      { "name": "The Balanced Headline Rule", "body": "Headings use text-wrap: balance and prose uses pretty; long concept names get break-words.", "section": "typography" },
+      { "name": "The Flat Wall Rule", "body": "Surfaces are flat at all times, including hover and focus. State changes are colour shifts (ink to ultramarine) and underline, never lift.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do separate entries with 1px Hairline rules and 64-128px of space.",
+      "Do keep ultramarine to the spine, links, focus, slab, and selection.",
+      "Do give every image a square plate with a muted caption or a monogram fallback.",
+      "Do put labels above values in 14px muted ink (object-label style).",
+      "Do keep the dark theme a re-mapping of the same roles (night-blue wall, warm paper ink), not a new palette.",
+      "Do keep a 2px ultramarine focus outline with 3px offset on all interactive elements."
+    ],
+    "donts": [
+      "Don't add shadows, gradients, glass, blur, or pill shapes; the wall is flat.",
+      "Don't introduce a second accent or colour the rival in ultramarine.",
+      "Don't set headings bold or use Caslon below 24px.",
+      "Don't box ordinary content in cards; use rules and whitespace.",
+      "Don't reintroduce the earlier neon \"cyber\" look (glow, dark-only chrome, neon accents)."
+    ]
+  }
+}

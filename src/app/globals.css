@@ -1,212 +1,116 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Gallery-wall palette. Light: cool stone wall. Dark: night-blue reading room.
+   One accent (ultramarine) for the spine, links and the codifier slab. */
+:root {
+    --background: #e8eae6;
+    --foreground: #15181d;
+    --muted-foreground: #4a5058;
+    --rule: #c3c7c1;
+    --plate: #d9dcd6;
+    --accent: #2437cc;
+    --accent-slab: #2437cc;
+    --accent-slab-foreground: #f4f5ff;
+    --rival: #a8321c;
+    /* The rival slab inverts the room: ink wall, light text, coral accent. */
+    --rival-on-slab: #f08a73;
+}
+
+.dark {
+    --background: #0e1116;
+    --foreground: #e9e7e0;
+    --muted-foreground: #9ba2ad;
+    --rule: #2a303a;
+    --plate: #171c25;
+    --accent: #93a3ff;
+    --accent-slab: #2f43e0;
+    --accent-slab-foreground: #f4f5ff;
+    --rival: #f08a73;
+    --rival-on-slab: #a8321c;
+}
+
 @theme inline {
     --color-background: var(--background);
     --color-foreground: var(--foreground);
-    --color-card: var(--card);
-    --color-card-foreground: var(--card-foreground);
-    --color-popover: var(--popover);
-    --color-popover-foreground: var(--popover-foreground);
-    --color-primary: var(--primary);
-    --color-primary-foreground: var(--primary-foreground);
-    --color-secondary: var(--secondary);
-    --color-secondary-foreground: var(--secondary-foreground);
-    --color-muted: var(--muted);
     --color-muted-foreground: var(--muted-foreground);
+    --color-rule: var(--rule);
+    --color-plate: var(--plate);
     --color-accent: var(--accent);
-    --color-accent-foreground: var(--accent-foreground);
-    --color-destructive: var(--destructive);
-    --color-destructive-foreground: var(--destructive-foreground);
-    --color-border: var(--border);
-    --color-input: var(--input);
-    --color-ring: var(--ring);
-    --radius-sm: calc(var(--radius) - 4px);
-    --radius-md: calc(var(--radius) - 2px);
-    --radius-lg: var(--radius);
-    --font-sans: var(--font-geist-sans);
-    --font-mono: var(--font-geist-mono);
-
-    /* Custom Cyber-Academic Colors */
-    --color-cyber-black: var(--cyber-black);
-    --color-cyber-gray: var(--cyber-gray);
-    --color-neon-blue: var(--neon-blue);
-    --color-neon-purple: var(--neon-purple);
-    --color-matrix-green: var(--matrix-green);
-    --color-dim-gray: var(--dim-gray);
-    --color-glass-border: var(--glass-border);
+    --color-slab: var(--accent-slab);
+    --color-slab-foreground: var(--accent-slab-foreground);
+    --color-rival: var(--rival);
+    --color-rival-slab: var(--rival-on-slab);
+    --font-sans: var(--font-hanken), ui-sans-serif, system-ui, sans-serif;
+    --font-display: var(--font-caslon), "Times New Roman", serif;
 }
 
-/* Light mode (default) */
-:root {
-    --background: #ffffff;
-    --foreground: #09090b;
-    --card: #ffffff;
-    --card-foreground: #09090b;
-    --popover: #ffffff;
-    --popover-foreground: #09090b;
-    --primary: #18181b;
-    --primary-foreground: #fafafa;
-    --secondary: #f4f4f5;
-    --secondary-foreground: #18181b;
-    --muted: #f4f4f5;
-    --muted-foreground: #71717a;
-    --accent: #f4f4f5;
-    --accent-foreground: #18181b;
-    --destructive: #ef4444;
-    --destructive-foreground: #fafafa;
-    --border: #e4e4e7;
-    --input: #e4e4e7;
-    --ring: #18181b;
-    --radius: 0.5rem;
-
-    /* Cyber colors (lighter for light mode) */
-    --cyber-black: #f8f8f8;
-    --cyber-gray: #e5e5e5;
-    --neon-blue: #2563eb;
-    --neon-purple: #7c3aed;
-    --matrix-green: #16a34a;
-    --dim-gray: #9ca3af;
-    --glass-border: rgba(0, 0, 0, 0.08);
-}
-
-/* Dark mode */
-.dark {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-    --card: #141414;
-    --card-foreground: #ededed;
-    --popover: #141414;
-    --popover-foreground: #ededed;
-    --primary: #ededed;
-    --primary-foreground: #0a0a0a;
-    --secondary: #1f1f1f;
-    --secondary-foreground: #ededed;
-    --muted: #1f1f1f;
-    --muted-foreground: #a0a0a0;
-    --accent: #262626;
-    --accent-foreground: #ededed;
-    --destructive: #dc2626;
-    --destructive-foreground: #fafafa;
-    --border: #262626;
-    --input: #1f1f1f;
-    --ring: #3f3f46;
-
-    /* Cyber-Academic Palette */
-    --cyber-black: #050505;
-    --cyber-gray: #1a1a1a;
-    --neon-blue: #00f3ff;
-    --neon-purple: #bc13fe;
-    --matrix-green: #00ff41;
-    --dim-gray: #4a4a4a;
-    --glass-border: rgba(255, 255, 255, 0.08);
+html {
+    scroll-behavior: smooth;
+    scroll-padding-top: 5rem;
+    scrollbar-color: var(--rule) var(--background);
 }
 
 body {
     background-color: var(--background);
     color: var(--foreground);
-    font-family: var(--font-sans);
-    transition: background-color 0.3s ease, color 0.3s ease;
+    font-family: var(--font-hanken), ui-sans-serif, system-ui, sans-serif;
+    font-size: 1.0625rem;
+    line-height: 1.6;
+    font-feature-settings: "kern", "liga";
 }
 
-/* Glassmorphism Effects */
-.glass-panel {
-    background: rgba(255, 255, 255, 0.7);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid var(--glass-border);
+h1, h2, h3 {
+    font-family: var(--font-caslon), "Times New Roman", serif;
+    font-weight: 400;
+    text-wrap: balance;
+    letter-spacing: -0.015em;
+    line-height: 1.05;
 }
 
-.dark .glass-panel {
-    background: rgba(10, 10, 10, 0.6);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+p { text-wrap: pretty; }
+
+::selection {
+    background: var(--accent-slab);
+    color: var(--accent-slab-foreground);
 }
 
-/* Grid pattern background */
-.bg-grid-pattern {
-    background-image:
-        linear-gradient(to right, var(--border) 1px, transparent 1px),
-        linear-gradient(to bottom, var(--border) 1px, transparent 1px);
-    background-size: 50px 50px;
+:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
 }
 
-/* Custom Animations */
-@keyframes float {
+a, button { text-underline-offset: 0.25em; }
 
-    0%,
-    100% {
-        transform: translateY(0px);
-    }
-
-    50% {
-        transform: translateY(-10px);
-    }
+::-webkit-scrollbar { width: 12px; }
+::-webkit-scrollbar-track { background: var(--background); }
+::-webkit-scrollbar-thumb {
+    background: var(--rule);
+    border: 3px solid var(--background);
+    border-radius: 6px;
 }
 
-@keyframes gradient {
-
-    0%,
-    100% {
-        background-position: 0% 50%;
-    }
-
-    50% {
-        background-position: 100% 50%;
-    }
+@media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
 }
 
-@keyframes pulse-glow {
-
-    0%,
-    100% {
-        box-shadow: 0 0 20px rgba(0, 243, 255, 0.2);
-    }
-
-    50% {
-        box-shadow: 0 0 40px rgba(0, 243, 255, 0.4);
-    }
+/* Loading status line: each message rises in, trailing dots count up. */
+@keyframes step-in {
+    from { opacity: 0; transform: translateY(0.5em); }
+    to { opacity: 1; transform: none; }
 }
 
-.animate-float {
-    animation: float 6s ease-in-out infinite;
+@keyframes dots {
+    0% { content: ""; }
+    25% { content: "."; }
+    50% { content: ".."; }
+    75%, 100% { content: "..."; }
 }
 
-.animate-gradient {
-    animation: gradient 8s linear infinite;
-}
+.loading-step { animation: step-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.loading-dots::after { content: ""; animation: dots 1.6s steps(1) infinite; }
 
-.animate-pulse-glow {
-    animation: pulse-glow 3s ease-in-out infinite;
-}
-
-/* Neon glow effect */
-.neon-glow {
-    box-shadow: 0 0 20px rgba(0, 243, 255, 0.15);
-}
-
-.dark .neon-glow {
-    box-shadow: 0 0 30px rgba(0, 243, 255, 0.3);
-}
-
-/* Scrollbar styling for dark mode */
-.dark ::-webkit-scrollbar {
-    width: 10px;
-}
-
-.dark ::-webkit-scrollbar-track {
-    background: var(--cyber-black);
-}
-
-.dark ::-webkit-scrollbar-thumb {
-    background: var(--dim-gray);
-    border-radius: 5px;
-}
-
-.dark ::-webkit-scrollbar-thumb:hover {
-    background: var(--neon-blue);
-}
-
-/* Smooth scrolling */
-html {
-    scroll-behavior: smooth;
+@media (prefers-reduced-motion: reduce) {
+    .loading-step, .loading-dots::after { animation: none; }
 }

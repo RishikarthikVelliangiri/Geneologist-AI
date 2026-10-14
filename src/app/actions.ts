@@ -3,43 +3,76 @@
 import { model } from '@/lib/gemini';
 import { GenealogyData } from '@/types';
 
-async function getGoogleImage(query: string): Promise<string | undefined> {
+const WIKI_API = 'https://en.wikipedia.org/w/api.php';
+// Wikimedia asks API clients to identify themselves; anonymous requests get throttled.
+const WIKI_HEADERS = { 'User-Agent': 'IdeaGenealogist/1.0 (portfolio project; rishikarthikv@gmail.com)' };
+// Wikimedia only serves a fixed set of thumbnail widths; others return 429.
+const THUMB_WIDTH = { entry: 500, plate: 960 } as const;
+
+/** True if the URL answers with a raster image. Many Google results are dead, blocked, or HTML pages. */
+async function isLoadableImage(url: string): Promise<boolean> {
   try {
-    const apiKey = process.env.GOOGLE_CUSTOM_SEARCH_API_KEY;
-    const searchEngineId = process.env.GOOGLE_CUSTOM_SEARCH_ENGINE_ID;
+    const res = await fetch(url, {
+      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; IdeaGenealogist/1.0)', Range: 'bytes=0-1023' },
+      redirect: 'follow',
+      signal: AbortSignal.timeout(4000),
+    });
+    const type = res.headers.get('content-type') ?? '';
+    return (res.ok || res.status === 206) && type.startsWith('image/') && !type.includes('svg');
+  } catch {
+    return false;
+  }
+}
 
-    if (!apiKey || !searchEngineId) {
-      console.log('Google Custom Search credentials not configured, using fallback');
-      return undefined;
-    }
-
-    console.log(`Fetching Google image for: ${query}`);
-    console.log(`API Key (first 10 chars): ${apiKey.substring(0, 10)}...`);
-    console.log(`Search Engine ID: ${searchEngineId}`);
-
-    const url = `https://www.googleapis.com/customsearch/v1?key=${apiKey}&cx=${searchEngineId}&q=${encodeURIComponent(query)}&searchType=image&num=1`;
-
-    const response = await fetch(url);
-
+/** First Google Custom Search image result that actually loads, or undefined. */
+async function getGoogleImage(query: string): Promise<string | undefined> {
+  const key = process.env.GOOGLE_CUSTOM_SEARCH_API_KEY;
+  const cx = process.env.GOOGLE_CUSTOM_SEARCH_ENGINE_ID;
+  if (!key || !cx) return undefined;
+  try {
+    const params = new URLSearchParams({ key, cx, q: query, searchType: 'image', num: '4', safe: 'active' });
+    const response = await fetch(`https://www.googleapis.com/customsearch/v1?${params}`, { signal: AbortSignal.timeout(6000) });
     if (!response.ok) {
-      // Get the error details from Google
-      const errorBody = await response.text();
-      console.error(`Google Custom Search API error: ${response.status} ${response.statusText}`);
-      console.error(`Error details: ${errorBody}`);
+      console.error(`Google image search failed (${response.status}); falling back to Wikipedia`);
       return undefined;
     }
-
-    const data = await response.json();
-
-    if (data.items && data.items.length > 0) {
-      const imageUrl = data.items[0].link;
-      console.log(`Found Google image: ${imageUrl}`);
-      return imageUrl;
-    }
-
-    console.log('No Google image found');
+    const links: string[] = ((await response.json()).items ?? []).map((item: { link: string }) => item.link).filter((l: string) => l.startsWith('https://'));
+    for (const link of links) if (await isLoadableImage(link)) return link;
   } catch (error) {
-    console.error('Error fetching Google image:', error);
+    console.error('Google image search error:', error);
+  }
+  return undefined;
+}
+
+/** Google first (broader coverage), then Wikipedia (free, hotlink-safe). */
+async function findImage(queries: string[], width: number): Promise<{ url: string; title?: string } | undefined> {
+  const google = await getGoogleImage(queries[0]);
+  return google ? { url: google } : getWikiImage(queries, width);
+}
+
+/** First Wikipedia search hit (of the top two) that has a lead image. Tries each query in order. */
+async function getWikiImage(queries: string[], width: number): Promise<{ url: string; title: string } | undefined> {
+  for (const query of queries.filter(Boolean)) {
+    try {
+      const params = new URLSearchParams({
+        action: 'query', format: 'json', generator: 'search', gsrsearch: query, gsrlimit: '2',
+        prop: 'pageimages', piprop: 'thumbnail', pithumbsize: String(width),
+      });
+      const response = await fetch(`${WIKI_API}?${params}`, {
+        headers: WIKI_HEADERS,
+        signal: AbortSignal.timeout(6000),
+        next: { revalidate: 86400 },
+      });
+      if (!response.ok) continue;
+
+      const data = await response.json();
+      const pages: { index: number; title: string; thumbnail?: { source: string } }[] = Object.values(data.query?.pages ?? {});
+      // Skip icons and logos: a lead image that is a symbol is worse than a placeholder.
+      const hit = pages.sort((a, b) => a.index - b.index).find((page) => page.thumbnail && !/\.svg\/|icon|logo/i.test(page.thumbnail.source));
+      if (hit?.thumbnail) return { url: hit.thumbnail.source, title: hit.title };
+    } catch (error) {
+      console.error(`Wikipedia image lookup failed for "${query}":`, error);
+    }
   }
   return undefined;
 }
@@ -133,44 +166,33 @@ export async function generateGenealogy(rawConcept: string): Promise<{ success: 
 
     const data = JSON.parse(cleanText) as GenealogyData;
 
-    // Try to fetch images for main concept and branches in parallel
+    // Fetch images for the concept, key figure, roots and branches in parallel.
+    // Entries with no match keep image_url undefined; the UI draws a typographic placeholder.
     const imagePromises = [
-      // Main concept image
-      (async () => {
-        const googleImage = await getGoogleImage(concept);
-        if (googleImage) {
-          data.image_url = googleImage;
-        } else {
-          const searchTerm = concept.toLowerCase().replace(/[^a-z0-9]+/g, ',');
-          data.image_url = `https://loremflickr.com/1280/720/${searchTerm}/all?lock=${Date.now()}`;
-          console.log(`Using Flickr fallback for main concept: ${searchTerm}`);
-        }
-      })(),
-      // Branch images
-      ...data.branches.map(async (branch) => {
-        const googleImage = await getGoogleImage(branch.name);
-        if (googleImage) {
-          branch.image_url = googleImage;
-        } else {
-          const searchTerm = branch.name.toLowerCase().replace(/[^a-z0-9]+/g, ',');
-          branch.image_url = `https://loremflickr.com/800/800/${searchTerm}/all?lock=${Date.now() + Math.random()}`;
-          console.log(`Using Flickr fallback for branch: ${branch.name}`);
-        }
+      findImage([concept], THUMB_WIDTH.plate).then((img) => {
+        data.image_url = img?.url;
+        data.image_title = img?.title;
       }),
-      // Root images
+      findImage([`${data.trunk.key_figure} ${concept}`, data.trunk.key_figure], THUMB_WIDTH.entry).then((img) => {
+        data.trunk.image_url = img?.url;
+      }),
+      ...data.branches.map(async (branch) => {
+        branch.image_url = (await findImage([`${branch.name} ${concept}`, branch.key_proponent], THUMB_WIDTH.entry))?.url;
+      }),
       ...data.roots.map(async (root) => {
-        const googleImage = await getGoogleImage(root.name);
-        if (googleImage) {
-          root.image_url = googleImage;
-        } else {
-          const searchTerm = root.name.toLowerCase().replace(/[^a-z0-9]+/g, ',');
-          root.image_url = `https://loremflickr.com/800/800/${searchTerm}/all?lock=${Date.now() + Math.random()}`;
-          console.log(`Using Flickr fallback for root: ${root.name}`);
-        }
-      })
+        root.image_url = (await findImage([root.name, `${root.name} ${concept}`], THUMB_WIDTH.entry))?.url;
+      }),
     ];
 
     await Promise.all(imagePromises);
+
+    // The same photo twice on one page (a branch resolving to the concept's own article) reads as a bug.
+    const seen = new Set<string>(data.image_url ? [data.image_url] : []);
+    for (const item of [data.trunk, ...data.roots, ...data.branches]) {
+      if (!item.image_url) continue;
+      if (seen.has(item.image_url)) item.image_url = undefined;
+      else seen.add(item.image_url);
+    }
 
     return { success: true, data };
   } catch (error) {

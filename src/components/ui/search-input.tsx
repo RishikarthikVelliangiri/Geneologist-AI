@@ -1,41 +1,47 @@
 'use client';
 
-import { Search } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { useState } from 'react';
+import { cn } from '@/lib/utils';
 
 interface SearchInputProps {
     onSearch: (term: string) => void;
     isLoading: boolean;
+    compact?: boolean;
 }
 
-export function SearchInput({ onSearch, isLoading }: SearchInputProps) {
+export function SearchInput({ onSearch, isLoading, compact }: SearchInputProps) {
     const [term, setTerm] = useState('');
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        if (term.trim()) {
-            onSearch(term);
-        }
+        if (term.trim()) onSearch(term.trim());
     };
 
     return (
-        <form onSubmit={handleSubmit} className="w-full max-w-2xl mx-auto relative group">
-            <div className="absolute inset-0 bg-neon-blue/20 blur-xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
-            <div className="relative flex items-center">
+        <form onSubmit={handleSubmit} role="search" className="w-full">
+            <label htmlFor="concept" className="sr-only">Concept to trace</label>
+            <div className="flex items-end gap-4 border-b border-foreground focus-within:border-accent transition-colors">
                 <input
+                    id="concept"
                     type="text"
                     value={term}
                     onChange={(e) => setTerm(e.target.value)}
-                    placeholder="Enter a concept (e.g., Stoicism, Cyberpunk, Democracy)..."
-                    className="w-full bg-card/80 dark:bg-cyber-gray/80 border border-input text-foreground placeholder:text-muted-foreground rounded-full py-4 pl-6 pr-14 focus:outline-none focus:border-neon-blue focus:ring-1 focus:ring-neon-blue transition-all font-mono text-lg backdrop-blur-md"
+                    placeholder="Stoicism, democracy, impressionism"
+                    autoComplete="off"
                     disabled={isLoading}
+                    className={cn(
+                        'min-w-0 flex-1 bg-transparent font-display placeholder:text-muted-foreground/60 focus:outline-none disabled:opacity-60',
+                        compact ? 'py-2 text-2xl' : 'py-3 text-3xl md:text-4xl'
+                    )}
                 />
                 <button
                     type="submit"
-                    disabled={isLoading}
-                    className="absolute right-2 p-2 bg-neon-blue/10 hover:bg-neon-blue/20 text-neon-blue dark:text-neon-blue text-blue-600 rounded-full transition-colors disabled:opacity-50"
+                    disabled={isLoading || !term.trim()}
+                    className="mb-2 inline-flex items-center gap-2 text-sm font-medium tracking-wide text-foreground hover:text-accent transition-colors disabled:opacity-40 disabled:hover:text-foreground"
                 >
-                    <Search className="w-6 h-6" />
+                    Trace
+                    <ArrowRight className="h-4 w-4" strokeWidth={1.75} />
                 </button>
             </div>
         </form>

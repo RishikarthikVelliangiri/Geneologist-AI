@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { toPng } from 'html-to-image';
 import { Download, Loader2 } from 'lucide-react';
+import { REVEAL_ALL } from './reveal';
 
 interface ExportButtonProps {
     targetId: string;
@@ -17,22 +18,15 @@ export function ExportButton({ targetId, fileName = 'genealogy-tree' }: ExportBu
         if (!element) return;
 
         setIsExporting(true);
-
         try {
-            // Add a small delay to ensure fonts/images are ready
-            await new Promise(resolve => setTimeout(resolve, 100));
-
+            // Make every scroll-revealed block visible, and let the animation settle.
+            window.dispatchEvent(new Event(REVEAL_ALL));
+            await new Promise((resolve) => setTimeout(resolve, 1000));
             const dataUrl = await toPng(element, {
-                backgroundColor: '#0a0a0a', // Match background color
-                pixelRatio: 2, // Higher quality
+                backgroundColor: getComputedStyle(document.body).backgroundColor,
+                pixelRatio: 2,
                 skipAutoScale: true,
-                filter: (node: Node) => {
-                    // Exclude the export button itself from the capture if it's inside the container
-                    if (node instanceof HTMLElement && node.tagName === 'BUTTON' && node.innerText.includes('Export')) {
-                        return false;
-                    }
-                    return true;
-                }
+                filter: (node) => !(node instanceof HTMLElement && node.dataset.exportIgnore !== undefined),
             });
 
             const link = document.createElement('a');
@@ -41,13 +35,7 @@ export function ExportButton({ targetId, fileName = 'genealogy-tree' }: ExportBu
             link.click();
         } catch (error) {
             console.error('Export failed:', error);
-            // Check if it's a CORS error (often shows as empty object or network error)
-            if (error instanceof Error) {
-                alert(`Export failed: ${error.message}`);
-            } else {
-                console.error('Unknown error object:', JSON.stringify(error));
-                alert('Export failed. This is likely due to a security restriction with the external concept image. Please try again or choose a concept without an external image.');
-            }
+            alert('Export failed. Some images may block being captured; please try again.');
         } finally {
             setIsExporting(false);
         }
@@ -55,16 +43,13 @@ export function ExportButton({ targetId, fileName = 'genealogy-tree' }: ExportBu
 
     return (
         <button
+            data-export-ignore
             onClick={handleExport}
             disabled={isExporting}
-            className="fixed bottom-8 right-8 lg:right-24 z-50 flex items-center gap-2 px-4 py-3 bg-neon-blue/10 hover:bg-neon-blue/20 border border-neon-blue/50 rounded-full text-neon-blue font-mono text-sm transition-all duration-300 backdrop-blur-md disabled:opacity-50 disabled:cursor-not-allowed"
+            className="inline-flex items-center gap-2 text-sm font-medium text-foreground hover:text-accent transition-colors disabled:opacity-50"
         >
-            {isExporting ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-            ) : (
-                <Download className="w-4 h-4" />
-            )}
-            {isExporting ? 'Capturing...' : 'Export Tree'}
+            {isExporting ? <Loader2 className="h-4 w-4 animate-spin" strokeWidth={1.75} /> : <Download className="h-4 w-4" strokeWidth={1.75} />}
+            {isExporting ? 'Rendering…' : 'Save as image'}
         </button>
     );
 }

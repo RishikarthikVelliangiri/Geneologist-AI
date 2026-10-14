@@ -13,6 +13,7 @@ export interface Trunk {
   year: string;
   context: string;
   influence: string;
+  image_url?: string;
 }
 
 export interface Branch {
@@ -35,6 +36,7 @@ export interface GenealogyData {
   summary: string;
   image_keywords: string;
   image_url?: string;
+  image_title?: string;
   roots: Root[];
   trunk: Trunk;
   branches: Branch[];
