@@ -3,12 +3,6 @@
 import { generateText } from '@/lib/gemini';
 import { GenealogyData } from '@/types';
 
-const WIKI_API = 'https://en.wikipedia.org/w/api.php';
-// Wikimedia asks API clients to identify themselves; anonymous requests get throttled.
-const WIKI_HEADERS = { 'User-Agent': 'IdeaGenealogist/1.0 (portfolio project; rishikarthikv@gmail.com)' };
-// Wikimedia only serves a fixed set of thumbnail widths; others return 429.
-const THUMB_WIDTH = { entry: 500, plate: 960 } as const;
-
 /** True if the URL answers with a raster image. Many Google results are dead, blocked, or HTML pages. */
 async function isLoadableImage(url: string): Promise<boolean> {
   try {
@@ -30,10 +24,10 @@ async function getGoogleImage(query: string): Promise<string | undefined> {
   const cx = process.env.GOOGLE_CUSTOM_SEARCH_ENGINE_ID;
   if (!key || !cx) return undefined;
   try {
-    const params = new URLSearchParams({ key, cx, q: query, searchType: 'image', num: '4', safe: 'active' });
+    const params = new URLSearchParams({ key, cx, q: query, searchType: 'image', num: '8', safe: 'active' });
     const response = await fetch(`https://www.googleapis.com/customsearch/v1?${params}`, { signal: AbortSignal.timeout(6000) });
     if (!response.ok) {
-      console.error(`Google image search failed (${response.status}); falling back to Wikipedia`);
+      console.error(`Google image search failed (${response.status})`);
       return undefined;
     }
     const links: string[] = ((await response.json()).items ?? []).map((item: { link: string }) => item.link).filter((l: string) => l.startsWith('https://'));
@@ -44,35 +38,11 @@ async function getGoogleImage(query: string): Promise<string | undefined> {
   return undefined;
 }
 
-/** Google first (broader coverage), then Wikipedia (free, hotlink-safe). */
-async function findImage(queries: string[], width: number): Promise<{ url: string; title?: string } | undefined> {
-  const google = await getGoogleImage(queries[0]);
-  return google ? { url: google } : getWikiImage(queries, width);
-}
-
-/** First Wikipedia search hit (of the top two) that has a lead image. Tries each query in order. */
-async function getWikiImage(queries: string[], width: number): Promise<{ url: string; title: string } | undefined> {
-  for (const query of queries.filter(Boolean)) {
-    try {
-      const params = new URLSearchParams({
-        action: 'query', format: 'json', generator: 'search', gsrsearch: query, gsrlimit: '2',
-        prop: 'pageimages', piprop: 'thumbnail', pithumbsize: String(width),
-      });
-      const response = await fetch(`${WIKI_API}?${params}`, {
-        headers: WIKI_HEADERS,
-        signal: AbortSignal.timeout(6000),
-        next: { revalidate: 86400 },
-      });
-      if (!response.ok) continue;
-
-      const data = await response.json();
-      const pages: { index: number; title: string; thumbnail?: { source: string } }[] = Object.values(data.query?.pages ?? {});
-      // Skip icons and logos: a lead image that is a symbol is worse than a placeholder.
-      const hit = pages.sort((a, b) => a.index - b.index).find((page) => page.thumbnail && !/\.svg\/|icon|logo/i.test(page.thumbnail.source));
-      if (hit?.thumbnail) return { url: hit.thumbnail.source, title: hit.title };
-    } catch (error) {
-      console.error(`Wikipedia image lookup failed for "${query}":`, error);
-    }
+/** Google Custom Search only: tries each query in order, returns the first image that loads. */
+async function findImage(queries: string[]): Promise<string | undefined> {
+  for (const query of queries) {
+    const url = await getGoogleImage(query);
+    if (url) return url;
   }
   return undefined;
 }
@@ -167,18 +137,17 @@ export async function generateGenealogy(rawConcept: string): Promise<{ success: 
     // Fetch images for the concept, key figure, roots and branches in parallel.
     // Entries with no match keep image_url undefined; the UI draws a typographic placeholder.
     const imagePromises = [
-      findImage([concept], THUMB_WIDTH.plate).then((img) => {
-        data.image_url = img?.url;
-        data.image_title = img?.title;
+      findImage([concept]).then((url) => {
+        data.image_url = url;
       }),
-      findImage([`${data.trunk.key_figure} ${concept}`, data.trunk.key_figure], THUMB_WIDTH.entry).then((img) => {
-        data.trunk.image_url = img?.url;
+      findImage([`${data.trunk.key_figure} ${concept}`, data.trunk.key_figure]).then((url) => {
+        data.trunk.image_url = url;
       }),
       ...data.branches.map(async (branch) => {
-        branch.image_url = (await findImage([`${branch.name} ${concept}`, branch.key_proponent], THUMB_WIDTH.entry))?.url;
+        branch.image_url = await findImage([`${branch.name} ${concept}`, branch.key_proponent]);
       }),
       ...data.roots.map(async (root) => {
-        root.image_url = (await findImage([root.name, `${root.name} ${concept}`], THUMB_WIDTH.entry))?.url;
+        root.image_url = await findImage([root.name, `${root.name} ${concept}`]);
       }),
     ];
 

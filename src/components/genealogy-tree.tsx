@@ -72,19 +72,6 @@ export function GenealogyTree({ data, onNodeClick }: GenealogyTreeProps) {
                 </div>
                 <figure>
                     <Plate src={data.image_url} alt={data.concept} priority className="aspect-[4/5] w-full" />
-                    {data.image_title && (
-                        <figcaption className="mt-3 text-sm text-muted-foreground">
-                            Image: Wikipedia,{' '}
-                            <a
-                                href={`https://en.wikipedia.org/wiki/${encodeURIComponent(data.image_title.replace(/ /g, '_'))}`}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="underline hover:text-foreground"
-                            >
-                                {data.image_title}
-                            </a>
-                        </figcaption>
-                    )}
                 </figure>
             </header>
 
