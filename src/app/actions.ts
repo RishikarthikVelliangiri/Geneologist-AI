@@ -1,6 +1,6 @@
 'use server';
 
-import { model } from '@/lib/gemini';
+import { generateText } from '@/lib/gemini';
 import { GenealogyData } from '@/types';
 
 const WIKI_API = 'https://en.wikipedia.org/w/api.php';
@@ -157,9 +157,7 @@ export async function generateGenealogy(rawConcept: string): Promise<{ success: 
       Be concise. Provide at least 2 roots and 2 branches.
     `;
 
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const text = response.text();
+    const text = await generateText(prompt);
 
     // Clean up the response if it contains markdown code blocks
     const cleanText = text.replace(/```json/g, '').replace(/```/g, '').trim();
@@ -204,7 +202,9 @@ export async function generateGenealogy(rawConcept: string): Promise<{ success: 
       console.error("Error message:", error.message);
       console.error("Stack:", error.stack);
 
-      if (error.message.includes("429") || error.message.includes("Quota")) {
+      if (/503|high demand|unavailable/i.test(error.message)) {
+        errorMessage = "The historian is busy right now (Gemini is under heavy demand). Please try again in a minute.";
+      } else if (error.message.includes("429") || error.message.includes("Quota")) {
         errorMessage = "Rate limit exceeded. The historian is overwhelmed. Please wait a moment before trying again.";
       }
     }

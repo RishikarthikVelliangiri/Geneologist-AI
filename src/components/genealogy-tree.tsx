@@ -88,7 +88,7 @@ export function GenealogyTree({ data, onNodeClick }: GenealogyTreeProps) {
                 </figure>
             </header>
 
-            <div ref={lineageRef} className="relative pl-10 md:pl-20">
+            <div ref={lineageRef} className="relative pl-10 [overflow-x:clip] md:pl-20">
                 <Ribbon progress={scrollYProgress} />
 
                 {roots.length > 0 && (
